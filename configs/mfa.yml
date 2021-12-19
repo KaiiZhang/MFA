@@ -1,0 +1,100 @@
+DATASETS:
+  GTA5:
+    DATA_PATH: './data/GTA5/images'
+    GT_PATH: './data/GTA5/labels'
+
+  CITYSCAPES:
+    DATA_PATH: './data/Cityscapes/leftImg8bit'
+    GT_PATH: './data/Cityscapes/gtFine'
+    PSEUDO_PATH: './data/Cityscapes/pseudo_label_0.45'
+
+  SYNTHIA:
+    DATA_PATH: './data/RAND_CITYSCAPES/RGB'
+    GT_PATH: './data/RAND_CITYSCAPES/GT/LABELS'
+
+INPUT:
+  USE_SOURCE_DATA: True
+  SOURCE:
+    N_CLASSES: 19
+    NAME: 'GTA5'
+    SIZE_TRAIN: [560, 1120]
+    SIZE_RESIZE: [1052, 1914]
+    USE_RESIZE: False
+    USE_RANDOMCROP: True
+    USE_HFLIP: True
+    SPLIT: 'all'
+    USE_RANDOMSCALE: True
+    SCALELIMIT: [-0.1, 1.37]
+  TARGET:
+    N_CLASSES: 19
+    NAME: 'CITYSCAPES'
+    SIZE_TRAIN: [560, 1120]
+    SIZE_RESIZE: [1024, 2048]
+    SIZE_TEST: [1024, 2048]
+    USE_RESIZE: False
+    USE_RANDOMCROP: True
+    USE_HFLIP: True
+    SPLIT: 'train'
+    USE_RANDOMSCALE: True
+    SCALELIMIT: [-0.14, 1.29]
+
+DATALOADER:
+  NUM_WORKERS: 8
+
+MODEL:
+  NAME: 'deeplabv2'
+  N_CHANNEL: 3
+  N_CLASS: 19
+  DEVICE: 'cuda'
+  BACKBONE_NAME: 'resnet101'
+  DEVICE_IDS: "'0'"
+  DROPOUT: 0.5
+  WEIGHT: ''
+
+SOLVER:
+  OPTIMIZER_NAME: "SGD"
+
+  TEMPORAL_CONSIST_WEIGHT: 1.0
+  CROSS_MODEL_CONSIST_WEIGHT: 0.5
+  ALPHA_START: 0.2
+  ALPHA_END: 0.7
+
+  BASE_LR: 2e-4
+  MIN_LR: 0.0
+  BIAS_LR_FACTOR: 1
+  USE_WARMUP: True
+
+  MOMENTUM: 0.9
+
+  WEIGHT_DECAY: 2e-4
+  WEIGHT_DECAY_BIAS: 5e-4
+
+  LR_SCHEDULER: 'poly'
+  GAMMA: 0.9
+  STEPS: [5, 10]
+  MIX_PRECISION: True
+
+  MAX_EPOCHS: 200
+  MAX_STEPS: 70000
+  WARMUP_STEP: 2000
+  CHECKPOINT_PERIOD: 5000
+  LOG_PERIOD: 200
+  EVAL_PERIOD: 5000
+  TRAIN_LOG: False
+  START_SAVE_STEP: 10000
+  START_EVAL_STEP: 10000
+
+  PER_BATCH: 2
+  RESUME: True
+  RESUME_CHECKPOINT_A: r'../pretrain/FDA/gta5_55000.pth'
+  RESUME_CHECKPOINT_B: r'../pretrain/SIM/BestGTA5Cov.pth'
+  TENSORBOARD:
+    USE: True
+    LOG_PERIOD: 20
+TEST:
+  WEIGHT: r'../cache/mfa_result/deeplabv2_A.pkl'
+
+OUTPUT_DIR: "../cache/mfa_gta5"
+
+
+
