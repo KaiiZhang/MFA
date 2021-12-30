@@ -92,5 +92,5 @@ If you like our work and use the code or models for your research, please cite o
 
 The codes and the pretrained model in this repository are under the MIT license as specified by the LICENSE file. 
 ## Acknowledgments
-This code is adapadaptedadaptedadaptedadaptedadapted from [image_seg](https://github.com/whut2962575697/image_seg).  
+This code is adapted from [image_seg](https://github.com/whut2962575697/image_seg).  
 We also thank to [FDA](https://github.com/YanchaoYang/FDA), [SIM](https://github.com/SHI-Labs/Unsupervised-Domain-Adaptation-with-Differential-Treatment), and [ProDa](https://github.com/microsoft/ProDA).
