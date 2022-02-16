@@ -2,7 +2,7 @@
 Author: Kai Zhang
 Date: 2021-11-20 18:19:44
 LastEditors: Kai Zhang
-LastEditTime: 2021-12-01 16:54:13
+LastEditTime: 2022-01-07 15:59:14
 Description: file content
 '''
 
@@ -103,8 +103,6 @@ def make_ddp_dataloader(cfg, world_size, rank):
     target_val_dataset = BaseDataImageSet(cfg, 'val', target_dataset_name, cfg.INPUT.TARGET.IMG_SUFFIX,
                                              cfg.INPUT.TARGET.SEG_MAP_SUFFIX, target_val_transform, cfg.INPUT.TARGET.N_CLASSES, 'val')
 
-
-
     source_train_sampler = torch.utils.data.distributed.DistributedSampler(source_train_dataset,
                                                                     num_replicas=world_size,
                                                                     rank=rank)
@@ -114,7 +112,6 @@ def make_ddp_dataloader(cfg, world_size, rank):
     target_val_sampler = torch.utils.data.distributed.DistributedSampler(target_val_dataset,
                                                                     num_replicas=world_size,
                                                                     rank=rank)
-
 
     source_train_loader = torch.utils.data.DataLoader(dataset=source_train_dataset,
                                                batch_size=cfg.SOLVER.PER_BATCH,
@@ -135,9 +132,6 @@ def make_ddp_dataloader(cfg, world_size, rank):
                                                pin_memory=True,
                                                sampler=target_val_sampler)
 
-
-
-    
     return source_train_loader, target_train_loader, target_val_loader, source_train_sampler, target_train_sampler, target_val_sampler
 
 
