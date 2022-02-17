@@ -210,3 +210,11 @@ class WarmUpLR(_LRScheduler):
             return [factor * base_lr for base_lr in cold_lrs]
 
         return cold_lrs
+
+    def step(self, epoch=None):
+        if epoch==None:
+            epoch = self.last_epoch + 1
+        self.last_epoch = epoch
+        for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
+            param_group['lr'] = lr
+        self.scheduler.last_epoch = epoch
