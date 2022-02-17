@@ -2,7 +2,7 @@
  * @Author: Kai Zhang
  * @Date: 2021-11-09 20:50:29
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-12-19 20:58:21
+ * @LastEditTime: 2022-02-17 15:57:27
  * @Description: README for MFA
 -->
 # Multiple Fusion Adaptation: A Strong Framework for Unsupervised Semantic Segmentation Adaptation (BMVC 2021, official Pytorch implementation)
@@ -11,6 +11,11 @@
 <!-- <br> -->
 [Kai Zhang](),  [Yifan Sun](), [Rui Wang](), [Haichang Li]() and [Xiaohui Hu]().
 <!-- <br> -->
+
+## Updates
+***17/2/2022***
+1. The problem that the learning rate does not decay as expected after the warmup stage is fixed. Thanks to [Pan](22051408@zju.edu.cn) for spotting this problem and suggesting a fix.
+
 ## Abstract
 >This paper challenges the cross-domain semantic segmentation task, aiming to improve the segmentation accuracy on the unlabeled target domain without incurring additional annotation. Using the pseudo-label-based unsupervised domain adaptation (UDA) pipeline, we propose a novel and effective Multiple Fusion Adaptation (MFA) method. MFA basically considers three parallel information fusion strategies, i.e., the cross-model fusion, temporal fusion and a novel online-offline pseudo label fusion. Specifically, the online-offline pseudo label fusion encourages the adaptive training to pay additional attention to difficult regions that are easily ignored by offline pseudo labels, therefore retaining more informative details. While the other two fusion strategies may look standard, MFA pays significant efforts to raise the efficiency and effectiveness for integration, and succeeds in injecting all the three strategies into a unified framework. Experiments on two widely used benchmarks, i.e., GTA5-to-Cityscapes and SYNTHIA-to-Cityscapes, show that our method significantly improves the semantic segmentation adaptation, and sets up new state of the art (58.2% and 62.5% mIoU, respectively).
 
