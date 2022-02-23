@@ -2,7 +2,7 @@
 Author: Kai Zhang
 Date: 2021-11-29 13:27:56
 LastEditors: Kai Zhang
-LastEditTime: 2021-11-30 16:21:14
+LastEditTime: 2022-02-23 15:09:58
 Description: creat trainer for train.py
 '''
 
@@ -20,6 +20,19 @@ import numpy as np
 from prettytable import PrettyTable
 from torch.cuda.amp import autocast as autocast
 import torch.distributed as dist
+class result_recorder(object):
+    def __init__(self, name, best_res=0.0, best_iter=0):
+        self.name = name
+        self.best_res = best_res
+        self.best_iter = best_iter
+    
+    def update(self, res, cur_iter):
+        if res>self.best_res:
+            self.best_res = res
+            self.best_iter = cur_iter
+
+    def __str__(self):
+        return 'The best result of {} is {:.4f} in {} iters \n'.format(self.name, self.best_res, self.best_iter)
 class BaseTrainer(object):
     def __init__(self, cfg, args, gpu,  model_A, model_B, source_train_loader, target_train_loader,
                  target_val_loader,  optimizer_A, optimizer_B, scaler):
@@ -45,8 +58,8 @@ class BaseTrainer(object):
         self.val_loss_avg = AvgerageMeter()
         self.val_acc_avg = AvgerageMeter()
 
-        self.best_val_mean_IoU = 0.0
-        self.best_val_iter = 0
+        self.res_recoder_A = result_recorder('mean_model_A')
+        self.res_recoder_B = result_recorder('mean_model_B')
 
         self.train_epoch = 1
         self.optim_A = optimizer_A
@@ -79,8 +92,6 @@ class BaseTrainer(object):
         
         self.scheduler_A = mfa_lr_scheduler(self.optim_A, self.cfg.SOLVER.USE_WARMUP, self.cfg.SOLVER.MAX_STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_STEP )
         self.scheduler_B = mfa_lr_scheduler(self.optim_B, self.cfg.SOLVER.USE_WARMUP, self.cfg.SOLVER.MAX_STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_STEP )
-
-
 
         self.cross_entropy = nn.CrossEntropyLoss(ignore_index=255).to(self.gpu)
         self.consist_loss = nn.MSELoss().to(self.gpu)
@@ -139,8 +150,8 @@ class BaseTrainer(object):
         if (self.current_iteration > self.cfg.SOLVER.START_EVAL_STEP and self.current_iteration % self.eval_period == 0) or self.current_iteration==600:
             torch.optim.swa_utils.update_bn(self.tt_dl, self.mean_model_A)
             torch.optim.swa_utils.update_bn(self.tt_dl, self.mean_model_B)
-            self.evaluate(self.mean_model_A)
-            self.evaluate(self.mean_model_B)
+            self.evaluate(self.mean_model_A, self.res_recoder_A)
+            self.evaluate(self.mean_model_B, self.res_recoder_B)
 
         if self.rank==0: 
             if self.current_iteration % self.cfg.SOLVER.TENSORBOARD.LOG_PERIOD == 0:
@@ -280,7 +291,7 @@ class BaseTrainer(object):
 
         self.scaler.update()
 
-    def evaluate(self, eval_model):
+    def evaluate(self, eval_model, res_recoder):
         eval_model.eval()
         self.conf_mat = torch.zeros((self.cfg.MODEL.N_CLASS, self.cfg.MODEL.N_CLASS), dtype=torch.int64).to(self.gpu)
         with torch.no_grad():
@@ -309,27 +320,29 @@ class BaseTrainer(object):
         
         if self.rank == 0:
             val_acc, val_acc_per_class, val_acc_cls, val_IoU, val_mean_IoU, val_kappa = m_evaluate(self.conf_mat.cpu().numpy())
-            if self.cfg.TEST.ONLY13_CLASSES:
-                valid_class = [0, 1, 2, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
-                val_IoU = [val_IoU[i] for i in valid_class]
-                val_mean_IoU = np.mean(val_IoU)
-                table = PrettyTable(["order", "name", "acc", "IoU"])
-                for i in range(13):
-                    ind = valid_class[i]
-                    table.add_row([i, self.cfg.DATASETS.CLASS_NAMES[ind], val_acc_per_class[ind], val_IoU[i]])
-            else:
-                table = PrettyTable(["order", "name", "acc", "IoU"])
-                for i in range(self.cfg.MODEL.N_CLASS):
-                    table.add_row([i, self.cfg.DATASETS.CLASS_NAMES[i], val_acc_per_class[i], val_IoU[i]])
+            
+            table = PrettyTable(["order", "name", "acc", "IoU"])
+            for i in range(self.cfg.MODEL.N_CLASS):
+                table.add_row([i, self.cfg.DATASETS.CLASS_NAMES[i], val_acc_per_class[i], val_IoU[i]])    
+            print(table)
+
+            valid_13_class = [0, 1, 2, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
+            valid_16_class = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
+            val_13_IoU = [val_IoU[i] for i in valid_13_class]
+            val_13_mean_IoU = np.mean(val_13_IoU)
+            val_16_IoU = [val_IoU[i] for i in valid_16_class]
+            val_16_mean_IoU = np.mean(val_16_IoU)
+
+            table = PrettyTable(["order", "name", "acc", "IoU"])
+            for i in range(self.cfg.MODEL.N_CLASS):
+                table.add_row([i, self.cfg.DATASETS.CLASS_NAMES[i], val_acc_per_class[i], val_IoU[i]])
+
             self.logger.info('Validation Result:')
             self.logger.info(table)
-            self.logger.info('VAL_LOSS: %s, VAL_ACC: %s VAL_MEAN_IOU: %s VAL_KAPPA: %s \n' %
-                            (self.val_loss_avg.avg, val_acc, val_mean_IoU, val_kappa))
-            if val_mean_IoU>self.best_val_mean_IoU:
-                self.best_val_mean_IoU = val_mean_IoU
-                self.best_val_iter = self.current_iteration
-            self.logger.info('Best result utill now is %s in %s iteration \n' %
-                            (self.best_val_mean_IoU, self.best_val_iter ))
+            self.logger.info('Val_19_mIoU: {:.4f} | Val_16_mIoU: {:.4f} | Val_13_mIoU: {:.4f} \n'.format(
+                                                                                val_mean_IoU, val_16_mean_IoU, val_13_mean_IoU))
+            res_recoder.update(val_mean_IoU, self.current_iteration)
+            self.logger.info(res_recoder)
             self.logger.info('-' * 20)
             if self.summary_writer:
                 self.summary_writer.add_scalar('Valid/loss', self.val_loss_avg.avg, self.train_epoch)
