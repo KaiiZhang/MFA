@@ -24,7 +24,7 @@ INPUT:
     USE_HFLIP: True
     SPLIT: 'all'
     USE_RANDOMSCALE: True
-    SCALELIMIT: [1.37, 2.0]
+    SCALELIMIT: [-0.1, 0.4]
   TARGET:
     N_CLASSES: 19
     NAME: 'CITYSCAPES'
@@ -36,10 +36,10 @@ INPUT:
     USE_HFLIP: True
     SPLIT: 'train'
     USE_RANDOMSCALE: True
-    SCALELIMIT: [-0.14, 1.29]
+    SCALELIMIT: [-0.1, 0.1]
 
 DATALOADER:
-  NUM_WORKERS: 8
+  NUM_WORKERS: 2
 
 MODEL:
   NAME: 'deeplabv2'
@@ -96,7 +96,7 @@ TEST:
   # WEIGHT: r'../cache/mfa_syn_result/deeplabv2_A.pkl'
   WEIGHT: '/home/lvyifan/zkai/uda/cache/from_synthia_to_cityscapes_on_deeplab_best_emma_model.pkl'
 
-OUTPUT_DIR: "../cache/mfa_syn"
+OUTPUT_DIR: "../cache/mfa_syn_fixscale"
 
 
 

@@ -24,7 +24,7 @@ INPUT:
     USE_HFLIP: True
     SPLIT: 'all'
     USE_RANDOMSCALE: True
-    SCALELIMIT: [-0.1, 1.37]
+    SCALELIMIT: [-0.1, 0.4]
   TARGET:
     N_CLASSES: 19
     NAME: 'CITYSCAPES'
@@ -36,10 +36,10 @@ INPUT:
     USE_HFLIP: True
     SPLIT: 'train'
     USE_RANDOMSCALE: True
-    SCALELIMIT: [-0.14, 1.29]
+    SCALELIMIT: [-0.1, 0.1]
 
 DATALOADER:
-  NUM_WORKERS: 8
+  NUM_WORKERS: 2
 
 MODEL:
   NAME: 'deeplabv2'
@@ -94,7 +94,7 @@ SOLVER:
 TEST:
   WEIGHT: r'../cache/mfa_result/deeplabv2_A.pkl'
 
-OUTPUT_DIR: "../cache/mfa_gta5"
+OUTPUT_DIR: "../cache/mfa_gta5_fixscale"
 
 
 

@@ -9,7 +9,7 @@ Description: start training shell
 import os
 
 #  GTA5-to-CITYSCAPES
-os.system('python train.py --config_file configs/mfa.yml -g 2')
+os.system('python train.py --config_file configs/mfa.yml -g 2 -p 12999')
 
 #  SYNTHIA-to-CITYSCAPES
-os.system('python train.py --config_file configs/mfa_syn.yml -g 2')
+os.system('python train.py --config_file configs/mfa_syn.yml -g 2 -p 12999')
